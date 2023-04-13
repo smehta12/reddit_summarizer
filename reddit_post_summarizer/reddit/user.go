@@ -10,6 +10,13 @@ import (
 	"strings"
 )
 
+type UserTokenResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
+	Scope       string `json:"scope"`
+}
+
 // TODO: getting {"error": "unsupported_grant_type"} when running code below
 func GetUserToken(username string, password string) string {
 	data := url.Values{}
@@ -21,6 +28,7 @@ func GetUserToken(username string, password string) string {
 	r, err := http.NewRequest("POST", "https://www.reddit.com/api/v1/access_token", strings.NewReader(encodedData))
 
 	if err != nil {
+		log.Println(err)
 		panic(err)
 	}
 
@@ -34,6 +42,7 @@ func GetUserToken(username string, password string) string {
 	res, err := client.Do(r)
 
 	if err != nil {
+		log.Println(err)
 		panic(err)
 	}
 
@@ -42,16 +51,18 @@ func GetUserToken(username string, password string) string {
 	responseData, err := io.ReadAll(res.Body)
 
 	if err != nil {
+		log.Println(err)
 		panic(err)
 	}
 	log.Println("Response Status:", res.Status)
 
-	m := make(map[string]string)
+	var m UserTokenResponse
 	err = json.Unmarshal(responseData, &m)
 
 	if err != nil {
+		log.Println(err)
 		panic(err)
 	}
 
-	return m["access_token"]
+	return m.AccessToken
 }
