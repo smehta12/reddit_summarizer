@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"./inference" //TODO: Change to proper package name
-	"./reddit"
+	"github.com/smehta12/reddit_summarizer/inference" //TODO: Change to proper package name
+	"github.com/smehta12/reddit_summarizer/reddit"
 )
 
 func main() {
