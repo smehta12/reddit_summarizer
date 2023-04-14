@@ -6,17 +6,19 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/pkoukk/tiktoken-go"
 )
 
-const OPEN_AI_COMPLETION_ENDPOINT = " https://api.openai.com/v1/completions"
+const OPEN_AI_COMPLETION_ENDPOINT = "https://api.openai.com/v1/completions"
 const SUMMARY_SIZE = 500
 const SUMMRY_SUFFIX = "\ntldr"
-const MAX_TOKENS = 4096
+const MAX_TOKENS = 4096 - SUMMARY_SIZE - len(SUMMRY_SUFFIX)
 const GPT_MODEL = "text-davinci-003"
+const MODEL_TOKENIZER_ENCODING = "p50k_base"
 
 type SummryResponse struct {
 	ID      string `json:"id"`
@@ -55,7 +57,7 @@ func summrizeText(comments []string) string {
 	var summrizedText []string
 	summerizedTextIdx := 0
 	for i < len(comments) {
-		numOfTokens := GetNumberOfTokens(comments[i])
+		numOfTokens := getNumberOfTokens(comments[i])
 
 		// TODO: What if the numOfTokens in the sentence is more than 4096?
 
@@ -71,6 +73,7 @@ func summrizeText(comments []string) string {
 			totalNumOfTokens = 0
 			paragraph = ""
 		}
+		i++
 	}
 	return summrizeText(summrizedText)
 }
@@ -87,7 +90,8 @@ func requestSummary(paragraph string) string {
 	var b Body
 	b.Model = GPT_MODEL
 	b.Prompt = paragraph
-	b.MaxTokens = MAX_TOKENS
+	b.MaxTokens = SUMMARY_SIZE
+	b.Suffix = SUMMRY_SUFFIX
 
 	requestBody, err := json.Marshal(b)
 
@@ -142,11 +146,20 @@ func cleanupComments(comments []string) {
 	}
 }
 
-func GetNumberOfTokens(comment string) int {
+func getNumberOfTokens(comment string) int {
+	encoding, err := tiktoken.GetEncoding(MODEL_TOKENIZER_ENCODING)
+
+	if err != nil {
+		log.Println("Error when getting tokenizer encoding")
+		log.Fatal(err)
+	}
+
+	return len(encoding.Encode(comment, nil, nil))
+
 	// Using rule of thumb from https://platform.openai.com/docs/introduction/key-concepts
 	// As a rough rule of thumb, 1 token is approximately 4 characters or 0.75 words for English text.
 
-	numOfChars := len(comment)
-	numOfTokens := math.Ceil(float64(numOfChars) / 4)
-	return int(numOfTokens)
+	// numOfChars := len(comment)
+	// numOfTokens := math.Ceil(float64(numOfChars) / 4)
+	// return int(numOfTokens)
 }
