@@ -155,11 +155,4 @@ func getNumberOfTokens(comment string) int {
 	}
 
 	return len(encoding.Encode(comment, nil, nil))
-
-	// Using rule of thumb from https://platform.openai.com/docs/introduction/key-concepts
-	// As a rough rule of thumb, 1 token is approximately 4 characters or 0.75 words for English text.
-
-	// numOfChars := len(comment)
-	// numOfTokens := math.Ceil(float64(numOfChars) / 4)
-	// return int(numOfTokens)
 }
