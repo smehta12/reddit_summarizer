@@ -28,5 +28,8 @@ func main() {
 		f.WriteString(val)
 		// f.WriteString("\n--------\n")
 	}
-	inference.GetSummarizedText(comments)
+
+	summarizedText := inference.GetSummarizedText(comments)
+
+	print("Got Below Summarized Text: \n" + summarizedText)
 }
