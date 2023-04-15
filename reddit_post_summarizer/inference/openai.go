@@ -15,12 +15,12 @@ import (
 
 const OPEN_AI_COMPLETION_ENDPOINT = "https://api.openai.com/v1/completions"
 const SUMMARY_SIZE = 500
-const SUMMRY_SUFFIX = "\ntldr"
-const MAX_TOKENS = 4096 - SUMMARY_SIZE - len(SUMMRY_SUFFIX)
+const SUMMARY_SUFFIX = "\ntldr"
+const MAX_TOKENS = 4096 - SUMMARY_SIZE - len(SUMMARY_SUFFIX)
 const GPT_MODEL = "text-davinci-003"
 const MODEL_TOKENIZER_ENCODING = "p50k_base"
 
-type SummryResponse struct {
+type SummaryResponse struct {
 	ID      string `json:"id"`
 	Object  string `json:"object"`
 	Created int    `json:"created"`
@@ -40,11 +40,11 @@ type SummryResponse struct {
 
 func GetSummarizedText(comments []string) string {
 	cleanupComments(comments)
-	summerizedText := summrizeText(comments)
-	return summerizedText
+	summarizedText := summarizeText(comments)
+	return summarizedText
 }
 
-func summrizeText(comments []string) string {
+func summarizeText(comments []string) string {
 
 	// base case.
 	if len(comments) == 1 && len(comments[0]) < SUMMARY_SIZE {
@@ -54,8 +54,7 @@ func summrizeText(comments []string) string {
 	i := 0
 	totalNumOfTokens := 0
 	var paragraph string
-	var summrizedText []string
-	summerizedTextIdx := 0
+	var summarizedText []string
 	for i < len(comments) {
 		numOfTokens := getNumberOfTokens(comments[i])
 
@@ -65,35 +64,43 @@ func summrizeText(comments []string) string {
 		if totalNumOfTokens <= MAX_TOKENS {
 			paragraph += comments[i]
 		} else {
-
-			// Save the summries in the array
-			summrizedText[summerizedTextIdx] = requestSummary(paragraph)
-			summerizedTextIdx++
+			summarizedText = append(summarizedText, requestSummary(paragraph))
 			i--
 			totalNumOfTokens = 0
 			paragraph = ""
 		}
 		i++
+
 	}
-	return summrizeText(summrizedText)
+	// for last paragraph
+	summarizedText = append(summarizedText, requestSummary(paragraph))
+	return summarizeText(summarizedText)
 }
 
 func requestSummary(paragraph string) string {
 
-	type Body struct {
-		Model     string `json:"model"`
-		Prompt    string `json:"prompt"`
-		MaxTokens int    `json:"max_tokens"`
-		Suffix    string `json:"suffix"`
+	type ModelParameters struct {
+		Model           string  `json:"model"`
+		Prompt          string  `json:"prompt"`
+		MaxTokens       int     `json:"max_tokens"`
+		Suffix          string  `json:"suffix"`
+		Temperature     float32 `json:"temperature"`
+		Top_p           float32 `json:"top_p"`
+		N               int     `json:"n"`
+		PresencePenalty float32 `json:"presence_penalty"`
 	}
 
-	var b Body
-	b.Model = GPT_MODEL
-	b.Prompt = paragraph
-	b.MaxTokens = SUMMARY_SIZE
-	b.Suffix = SUMMRY_SUFFIX
+	var mp ModelParameters
+	mp.Model = GPT_MODEL
+	mp.Prompt = paragraph + SUMMARY_SUFFIX
+	mp.MaxTokens = SUMMARY_SIZE
+	mp.Suffix = ""
+	mp.N = 1
+	mp.Temperature = 0.7   //Sugggested in TLDR playground example on openai
+	mp.Top_p = 1           //Default
+	mp.PresencePenalty = 1 //Sugggested in TLDR playground example on openai
 
-	requestBody, err := json.Marshal(b)
+	requestBody, err := json.Marshal(mp)
 
 	if err != nil {
 		log.Println("Error while creating request body json")
@@ -128,7 +135,7 @@ func requestSummary(paragraph string) string {
 	}
 	fmt.Println("Response Status:", response.Status)
 
-	var resJson SummryResponse
+	var resJson SummaryResponse
 
 	err = json.Unmarshal(responseData, &resJson)
 
