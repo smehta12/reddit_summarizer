@@ -96,9 +96,9 @@ func requestSummary(paragraph string) string {
 	mp.MaxTokens = SUMMARY_SIZE
 	mp.Suffix = ""
 	mp.N = 1
-	mp.Temperature = 0.7   //Sugggested in TLDR playground example on openai
-	mp.Top_p = 1           //Default
-	mp.PresencePenalty = 1 //Sugggested in TLDR playground example on openai
+	mp.Temperature = 0.7
+	mp.Top_p = 1 //Default
+	mp.PresencePenalty = 1
 
 	requestBody, err := json.Marshal(mp)
 
