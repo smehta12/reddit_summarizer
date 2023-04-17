@@ -56,7 +56,7 @@ type SummaryCleanupResponse struct {
 func GetSummarizedText(comments []string) string {
 	cleanupComments(comments)
 	summarizedText := summarizeTextRecursive(comments)
-	summarizedText = cleanupSummary(summarizedText)
+	summarizedText = formatSummary(summarizedText)
 	return summarizedText
 }
 
@@ -154,7 +154,7 @@ func getNumberOfTokens(comment string) int {
 	return len(encoding.Encode(comment, nil, nil))
 }
 
-func cleanupSummary(summary string) string {
+func formatSummary(summary string) string {
 	cleanupInstruction := "cleanup this text"
 
 	modelParameters := make(map[string]interface{})
