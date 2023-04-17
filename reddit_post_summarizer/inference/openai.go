@@ -13,10 +13,12 @@ import (
 )
 
 const OPEN_AI_COMPLETION_ENDPOINT = "https://api.openai.com/v1/completions"
+const OPEN_AI_EDIT_ENDPOINT = "https://api.openai.com/v1/edits"
 const SUMMARY_SIZE = 500
 const SUMMARY_SUFFIX = "\ntldr"
 const MAX_TOKENS = 4096 - SUMMARY_SIZE - len(SUMMARY_SUFFIX)
-const GPT_MODEL = "text-davinci-003"
+const SUMMARY_GPT_MODEL = "text-davinci-003"
+const FORMATTING_GPT_MODEL = "text-davinci-edit-001"
 const MODEL_TOKENIZER_ENCODING = "p50k_base"
 
 type SummaryResponse struct {
@@ -53,12 +55,12 @@ type SummaryCleanupResponse struct {
 
 func GetSummarizedText(comments []string) string {
 	cleanupComments(comments)
-	summarizedText := summarizeText(comments)
+	summarizedText := summarizeTextRecursive(comments)
 	summarizedText = cleanupSummary(summarizedText)
 	return summarizedText
 }
 
-func summarizeText(comments []string) string {
+func summarizeTextRecursive(comments []string) string {
 
 	// base case.
 	if len(comments) == 1 && len(comments[0]) < SUMMARY_SIZE {
@@ -88,7 +90,7 @@ func summarizeText(comments []string) string {
 	}
 	// for last paragraph
 	summarizedText = append(summarizedText, requestSummary(paragraph))
-	return summarizeText(summarizedText)
+	return summarizeTextRecursive(summarizedText)
 }
 
 func requestSummary(paragraph string) string {
@@ -105,9 +107,9 @@ func requestSummary(paragraph string) string {
 	}
 
 	var mp ModelParameters
-	mp.Model = GPT_MODEL
+	mp.Model = SUMMARY_GPT_MODEL
 	mp.Prompt = paragraph + SUMMARY_SUFFIX
-	mp.MaxTokens = SUMMARY_SIZE
+	mp.MaxTokens = 500
 	mp.Suffix = ""
 	mp.N = 1
 	mp.Temperature = 0.7
@@ -121,32 +123,7 @@ func requestSummary(paragraph string) string {
 		panic(err)
 	}
 
-	request, err := http.NewRequest("POST", OPEN_AI_COMPLETION_ENDPOINT, bytes.NewBuffer(requestBody))
-
-	if err != nil {
-		log.Println("Error while creating new request")
-		panic(err)
-	}
-
-	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("Authorization", "Bearer "+os.Getenv("OPEN_AI_BEARER"))
-
-	client := http.Client{}
-	response, err := client.Do(request)
-
-	if err != nil {
-		log.Println("Error while getting summary response")
-		panic(err)
-	}
-
-	defer response.Body.Close()
-
-	responseData, err := io.ReadAll(response.Body)
-
-	if err != nil {
-		log.Println("Error in reading raw comments from response")
-		log.Fatal(err)
-	}
+	responseData := openaiPostRequest(bytes.NewBuffer(requestBody), OPEN_AI_COMPLETION_ENDPOINT, "summarization")
 
 	var resJson SummaryResponse
 
@@ -182,7 +159,7 @@ func cleanupSummary(summary string) string {
 
 	modelParameters := make(map[string]interface{})
 
-	modelParameters["model"] = "text-davinci-edit-001"
+	modelParameters["model"] = FORMATTING_GPT_MODEL
 	modelParameters["input"] = summary
 	modelParameters["instruction"] = cleanupInstruction
 	modelParameters["top_p"] = 1
@@ -195,10 +172,24 @@ func cleanupSummary(summary string) string {
 		panic(err)
 	}
 
-	request, err := http.NewRequest("POST", "https://api.openai.com/v1/edits", bytes.NewBuffer(requestBody))
+	responseData := openaiPostRequest(bytes.NewBuffer(requestBody), OPEN_AI_EDIT_ENDPOINT, "Summary Cleanup")
+
+	var resJson SummaryCleanupResponse
+
+	json.Unmarshal(responseData, &resJson)
+
+	return resJson.Choices[0].Text
+}
+
+func openaiPostRequest(body io.Reader, requestURL string, intent string) []byte {
+	// body: Post request body
+	// requestURL: OpenAI endpoint
+	// intent: Purpose of the request. It is used in logs
+
+	request, err := http.NewRequest("POST", requestURL, body)
 
 	if err != nil {
-		log.Println("Error while creating new request in summary cleanup")
+		log.Println("Error while creating new request for " + intent)
 		panic(err)
 	}
 
@@ -209,20 +200,18 @@ func cleanupSummary(summary string) string {
 	response, err := client.Do(request)
 
 	if err != nil {
-		log.Println("Error while getting summary response in summary cleanup")
+		log.Println("Error while getting response for" + intent)
 		panic(err)
 	}
+
 	defer response.Body.Close()
+
 	responseData, err := io.ReadAll(response.Body)
 
 	if err != nil {
-		log.Println("Error in reading raw comments from response in summary cleanup")
+		log.Println("Error in reading from response for " + intent)
 		panic(err)
 	}
 
-	var resJson SummaryCleanupResponse
-
-	json.Unmarshal(responseData, &resJson)
-
-	return resJson.Choices[0].Text
+	return responseData
 }
