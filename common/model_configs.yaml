@@ -1,0 +1,6 @@
+---
+t5_small:
+    model_name: "t5_small"
+    tokenizer_name: "t5_small"
+    max_length: 512
+    min_length: 32
