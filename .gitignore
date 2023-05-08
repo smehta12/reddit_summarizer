@@ -1,1 +1,2 @@
-reddit_post_summarizer/.vscode/launch.json
+.vscode/*
+*.txt
