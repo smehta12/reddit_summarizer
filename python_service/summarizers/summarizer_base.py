@@ -3,10 +3,11 @@ import yaml
 from yaml import Loader
 
 class SummarizerBase(object):
-    def __init__(self):
+    def __init__(self, model_name):
         # Get model configs
         with open("../../common/model_configs.yaml") as f:
-            self._model_configs = yaml.load(f, Loader)
+            _model_configs = yaml.load(f, Loader)
+        self._model_configs = _model_configs[model_name]
 
     @property
     def model_configs(self):
