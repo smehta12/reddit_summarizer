@@ -1,5 +1,4 @@
 import uvicorn
-import requests
 
 from fastapi import FastAPI
 from pydantic import validator, BaseModel
@@ -11,9 +10,11 @@ class SummarizerInput(BaseModel):
 
     @validator('model_name', allow_reuse=True)
     def validator_model_name(cls, model_name):
-        model_names = SummarizerBase().model_configs.keys()
+        model_names = SummarizerBase.get_model_configs().keys()
         if model_name not in model_names:
             raise ValueError(f"model_name must be one of {model_names}")
+
+        return model_name
 
 
 app = FastAPI()
@@ -30,7 +31,7 @@ def summarize(summarizer_input: SummarizerInput):
 
 @app.get("/model_names", tags=["summarization"])
 def get_model_names():
-    return list(SummarizerBase().model_configs.keys())
+    return list(SummarizerBase.get_model_configs().keys())
 
 
 if __name__ == "__main__":
