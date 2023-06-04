@@ -1,3 +1,4 @@
 .vscode/*
 *.txt
+.idea/*
 model_cache/*
