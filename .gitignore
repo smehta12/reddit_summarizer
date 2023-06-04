@@ -2,3 +2,4 @@
 *.txt
 .idea/*
 model_cache/*
+*.pyc
