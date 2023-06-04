@@ -53,21 +53,47 @@ func getSummary(c *gin.Context) {
 	// get the best one.
 	bearerToken := reddit.GetUserToken(redditUName, redditPwd)
 	comments := reddit.LoadComments(subredditName, postId, sortingMethod, depth, bearerToken)
-	var sr inference.SummarizerRequester
-	emptyStr := ""
-	ors := inference.OpenAIRequestSummary{Paragraph: &emptyStr}
-	sr = &ors
+
+	// var sr inference.SummarizerRequester
+	// emptyStr := ""
+	// ors := inference.OpenAIRequestSummary{Paragraph: &emptyStr}
+	// sr = &ors
 
 	config := getYamlConfig()
-	con, ok := config["text-davinci-003"].(map[string]interface{})
-	if !ok {
-		panic("could not find key in the model config")
-	}
-	summarysize := con["summary_size"].(int)
-	totalMaxTokens := con["max_tokens"].(int) - summarysize - len(con["summary_suffix"].(string))
-	summarizedText := inference.GetSummarizedText(sr, comments, summarysize, totalMaxTokens)
+	summarizedText := make(map[string]string, len(config))
 
-	c.JSON(200, strings.TrimSpace(summarizedText))
+	emptyStr := ""
+	var sr inference.SummarizerRequester
+	for model_name := range config {
+		con, ok := config[model_name].(map[string]interface{})
+		if !ok {
+			panic("could not find key in the model config")
+		}
+
+		if con["model_type"] == "openai" {
+			ors := inference.OpenAIRequestSummary{Paragraph: &emptyStr}
+			sr = &ors
+		} else if con["model_type"] == "py_service" {
+			psrs := inference.PyServiceRequestSummary{Paragraph: &emptyStr}
+			sr = &psrs
+		} else {
+			panic("Invalid Model Type")
+		}
+
+		// TODO: Add channel for parallel summarization
+		summarysize := con["summary_size"].(int)
+		totalMaxTokens := con["max_tokens"].(int) - summarysize - len(con["summary_suffix"].(string))
+		summarizedText[model_name] = inference.GetSummarizedText(sr, comments, summarysize, totalMaxTokens)
+	}
+	// con, ok := config["text-davinci-003"].(map[string]interface{})
+	// if !ok {
+	// 	panic("could not find key in the model config")
+	// }
+	// summarysize := con["summary_size"].(int)
+	// totalMaxTokens := con["max_tokens"].(int) - summarysize - len(con["summary_suffix"].(string))
+	// summarizedText := inference.GetSummarizedText(sr, comments, summarysize, totalMaxTokens)
+
+	c.JSON(200, strings.TrimSpace(summarizedText["text-davinci-003"]))
 }
 
 func getYamlConfig() map[string]interface{} {
