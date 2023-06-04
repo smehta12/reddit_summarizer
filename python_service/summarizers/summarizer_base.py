@@ -6,7 +6,7 @@ class SummarizerBase(object):
 
     @staticmethod
     def get_model_configs():
-        with open("../../common/model_configs.yaml") as f:
+        with open("../../model_configs.yaml") as f:
             return yaml.load(f, Loader)
 
     def __init__(self, model_name):
