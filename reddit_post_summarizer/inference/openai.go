@@ -7,9 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
-
-	"github.com/pkoukk/tiktoken-go"
 )
 
 const OPEN_AI_COMPLETION_ENDPOINT = "https://api.openai.com/v1/completions"
@@ -53,47 +50,11 @@ type SummaryCleanupResponse struct {
 	} `json:"usage"`
 }
 
-func GetSummarizedText(comments []string) string {
-	cleanupComments(comments)
-	summarizedText := summarizeTextRecursive(comments)
-	summarizedText = formatSummary(summarizedText)
-	return summarizedText
+type OpenAIRequestSummary struct {
+	Paragraph string
 }
 
-func summarizeTextRecursive(comments []string) string {
-
-	// base case.
-	if len(comments) == 1 && len(comments[0]) < SUMMARY_SIZE {
-		return comments[0]
-	}
-
-	i := 0
-	totalNumOfTokens := 0
-	var paragraph string
-	var summarizedText []string
-	for i < len(comments) {
-		numOfTokens := getNumberOfTokens(comments[i])
-
-		// TODO: What if the numOfTokens in the sentence is more than 4096?
-
-		totalNumOfTokens += numOfTokens
-		if totalNumOfTokens <= MAX_TOKENS {
-			paragraph += comments[i]
-		} else {
-			summarizedText = append(summarizedText, requestSummary(paragraph))
-			i--
-			totalNumOfTokens = 0
-			paragraph = ""
-		}
-		i++
-
-	}
-	// for last paragraph
-	summarizedText = append(summarizedText, requestSummary(paragraph))
-	return summarizeTextRecursive(summarizedText)
-}
-
-func requestSummary(paragraph string) string {
+func (rs OpenAIRequestSummary) requestSummary() string {
 
 	type ModelParameters struct {
 		Model           string  `json:"model"`
@@ -108,7 +69,7 @@ func requestSummary(paragraph string) string {
 
 	var mp ModelParameters
 	mp.Model = SUMMARY_GPT_MODEL
-	mp.Prompt = paragraph + SUMMARY_SUFFIX
+	mp.Prompt = rs.Paragraph + SUMMARY_SUFFIX
 	mp.MaxTokens = 500
 	mp.Suffix = ""
 	mp.N = 1
@@ -135,23 +96,6 @@ func requestSummary(paragraph string) string {
 	}
 
 	return resJson.Choices[0].Text
-}
-
-func cleanupComments(comments []string) {
-	for i, s := range comments {
-		comments[i] = strings.TrimSpace(s)
-	}
-}
-
-func getNumberOfTokens(comment string) int {
-	encoding, err := tiktoken.GetEncoding(MODEL_TOKENIZER_ENCODING)
-
-	if err != nil {
-		log.Println("Error when getting tokenizer encoding")
-		log.Fatal(err)
-	}
-
-	return len(encoding.Encode(comment, nil, nil))
 }
 
 func formatSummary(summary string) string {
