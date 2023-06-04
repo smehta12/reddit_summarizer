@@ -11,14 +11,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-//TODO: Change to proper package name
-
 func getSummary(c *gin.Context) {
 	var subredditName string
 	var postId string
 
 	redditURL := c.Query("reddit_url")
-	// TODO: Get from auth method
 	redditUName := c.Query("reddit_username")
 	redditPwd := c.Query("reddit_password")
 
@@ -56,9 +53,9 @@ func getSummary(c *gin.Context) {
 	// get the best one.
 	bearerToken := reddit.GetUserToken(redditUName, redditPwd)
 	comments := reddit.LoadComments(subredditName, postId, sortingMethod, depth, bearerToken)
-
 	var sr inference.SummarizerRequester
-	ors := inference.OpenAIRequestSummary{Paragraph: ""}
+	emptyStr := ""
+	ors := inference.OpenAIRequestSummary{Paragraph: &emptyStr}
 	sr = &ors
 
 	config := getYamlConfig()

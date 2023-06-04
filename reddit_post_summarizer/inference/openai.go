@@ -51,7 +51,7 @@ type SummaryCleanupResponse struct {
 }
 
 type OpenAIRequestSummary struct {
-	Paragraph string
+	Paragraph *string
 }
 
 func (rs OpenAIRequestSummary) requestSummary() string {
@@ -69,7 +69,7 @@ func (rs OpenAIRequestSummary) requestSummary() string {
 
 	var mp ModelParameters
 	mp.Model = SUMMARY_GPT_MODEL
-	mp.Prompt = rs.Paragraph + SUMMARY_SUFFIX
+	mp.Prompt = *rs.Paragraph + SUMMARY_SUFFIX
 	mp.MaxTokens = 500
 	mp.Suffix = ""
 	mp.N = 1
@@ -98,13 +98,13 @@ func (rs OpenAIRequestSummary) requestSummary() string {
 	return resJson.Choices[0].Text
 }
 
-func formatSummary(summary string) string {
+func formatSummary(summary *string) string {
 	cleanupInstruction := "cleanup this text"
 
 	modelParameters := make(map[string]interface{})
 
 	modelParameters["model"] = FORMATTING_GPT_MODEL
-	modelParameters["input"] = summary
+	modelParameters["input"] = *summary
 	modelParameters["instruction"] = cleanupInstruction
 	modelParameters["top_p"] = 1
 	modelParameters["temperature"] = 0

@@ -12,13 +12,13 @@ type SummarizerRequester interface {
 }
 
 type PyServiceRequestSummary struct {
-	Paragraph string
+	Paragraph *string
 }
 
 func GetSummarizedText(sr SummarizerRequester, comments []string, summarySize int, totalMaxTokens int) string {
 	cleanupComments(comments)
 	summarizedText := summarizeTextRecursive(sr, comments, summarySize, totalMaxTokens)
-	summarizedText = formatSummary(summarizedText)
+	summarizedText = formatSummary(&summarizedText)
 	return summarizedText
 }
 
@@ -44,7 +44,7 @@ func summarizeTextRecursive(sr SummarizerRequester, comments []string, summarySi
 		if totalNumOfTokens <= totalMaxTokens {
 			paragraph += comments[i]
 		} else {
-			assignParagraph(sr, paragraph)
+			assignParagraph(sr, &paragraph)
 			summarizedText = append(summarizedText, sr.requestSummary())
 			i--
 			totalNumOfTokens = 0
@@ -54,12 +54,12 @@ func summarizeTextRecursive(sr SummarizerRequester, comments []string, summarySi
 	}
 
 	// for last paragraph
-	assignParagraph(sr, paragraph)
+	assignParagraph(sr, &paragraph)
 	summarizedText = append(summarizedText, sr.requestSummary())
 	return summarizeTextRecursive(sr, summarizedText, summarySize, totalMaxTokens)
 }
 
-func assignParagraph(sr SummarizerRequester, paragraph string) {
+func assignParagraph(sr SummarizerRequester, paragraph *string) {
 	switch s := sr.(type) {
 	case *PyServiceRequestSummary:
 		s.Paragraph = paragraph
