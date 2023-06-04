@@ -1,10 +1,12 @@
 ---
 t5-small:
+    model_type: "py_service"
     model_name: "t5-small"
     tokenizer_name: "t5-small"
     max_length: 512
     min_length: 32
 text-davinci-003:
+    model_type: "openai"
     model_name: "text-davinci-003"
     summary_size: 500
     summary_suffix: "\ntldr"
