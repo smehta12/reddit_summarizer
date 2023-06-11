@@ -3,11 +3,17 @@ t5-small:
     model_type: "py_service"
     model_name: "t5-small"
     tokenizer_name: "t5-small"
-    max_length: 512
-    min_length: 32
+    max_tokens: 512
+    min_new_tokens: 80 # ~15% of max_length
+#t5-large:
+#    model_type: "py_service"
+#    model_name: "t5-large"
+#    tokenizer_name: "t5-large"
+#    max_tokens: 512
+#    min_new_tokens: 80 # ~15% of max_length
 text-davinci-003:
     model_type: "openai"
     model_name: "text-davinci-003"
-    summary_size: 500
+    min_new_tokens: 500 # summary_size
     summary_suffix: "\ntldr"
     max_tokens: 4096
