@@ -2,7 +2,6 @@ package reddit
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -207,7 +206,7 @@ func LoadComments(subReddit string, postId string, sortingMethod string, depth i
 		log.Println("Error in reading raw comments from response")
 		log.Fatal(err)
 	}
-	fmt.Println("Response Status:", res.Status)
+	log.Println("Response Status:", res.Status)
 
 	var resJson CommentResponse
 
