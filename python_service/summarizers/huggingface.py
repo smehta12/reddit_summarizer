@@ -21,8 +21,9 @@ class HuggingFaceSummarizer(SummarizerBase):
 
     def summarize(self, text):
         input_ids = self.tokenizer.encode(text, return_tensors='tf')
-        ids = self.model.generate(input_ids, max_length=self.model_configs["max_length"],
-                            min_length=self.model_configs["min_length"])
+        # Config Input API: https://huggingface.co/docs/transformers/v4.29.1/en/main_classes/text_generation#transformers.GenerationConfig
+        ids = self.model.generate(input_ids, max_length=self.model_configs["max_tokens"],
+                                  min_new_tokens=self.model_configs["min_new_tokens"])
         return self.tokenizer.decode(ids[0], skip_special_tokens=True)
 
 if __name__ == "__main__":
