@@ -11,10 +11,8 @@ import (
 
 const OPEN_AI_COMPLETION_ENDPOINT = "https://api.openai.com/v1/completions"
 const OPEN_AI_EDIT_ENDPOINT = "https://api.openai.com/v1/edits"
-const SUMMARY_SIZE = 500
+
 const SUMMARY_SUFFIX = "\ntldr"
-const MAX_TOKENS = 4096 - SUMMARY_SIZE - len(SUMMARY_SUFFIX)
-const SUMMARY_GPT_MODEL = "text-davinci-003"
 const FORMATTING_GPT_MODEL = "text-davinci-edit-001"
 const MODEL_TOKENIZER_ENCODING = "p50k_base"
 
@@ -52,6 +50,7 @@ type SummaryCleanupResponse struct {
 
 type OpenAIRequestSummary struct {
 	Paragraph *string
+	ModelName string
 }
 
 func (rs OpenAIRequestSummary) requestSummary() string {
@@ -68,7 +67,7 @@ func (rs OpenAIRequestSummary) requestSummary() string {
 	}
 
 	var mp ModelParameters
-	mp.Model = SUMMARY_GPT_MODEL
+	mp.Model = rs.ModelName
 	mp.Prompt = *rs.Paragraph + SUMMARY_SUFFIX
 	mp.MaxTokens = 500
 	mp.Suffix = ""
