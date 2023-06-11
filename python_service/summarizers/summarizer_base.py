@@ -22,6 +22,5 @@ class SummarizerBase(object):
 
 # simple factory method to find model
 def get_model_object(model_name):
-    if model_name == 't5-small':
-        from python_service.summarizers.huggingface import HuggingFaceSummarizer
-        return HuggingFaceSummarizer(model_name)
+    from python_service.summarizers.huggingface import HuggingFaceSummarizer
+    return HuggingFaceSummarizer(model_name)
