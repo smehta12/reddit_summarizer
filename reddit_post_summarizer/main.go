@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"strings"
 
@@ -54,11 +56,6 @@ func getSummary(c *gin.Context) {
 	bearerToken := reddit.GetUserToken(redditUName, redditPwd)
 	comments := reddit.LoadComments(subredditName, postId, sortingMethod, depth, bearerToken)
 
-	// var sr inference.SummarizerRequester
-	// emptyStr := ""
-	// ors := inference.OpenAIRequestSummary{Paragraph: &emptyStr}
-	// sr = &ors
-
 	config := getYamlConfig()
 	summarizedText := make(map[string]string, len(config))
 
@@ -70,28 +67,27 @@ func getSummary(c *gin.Context) {
 			panic("could not find key in the model config")
 		}
 
+		summarysize := con["min_new_tokens"].(int)
+		var totalMaxTokens int
 		if con["model_type"] == "openai" {
 			ors := inference.OpenAIRequestSummary{Paragraph: &emptyStr}
 			sr = &ors
+			totalMaxTokens = con["max_tokens"].(int) - summarysize - len(con["summary_suffix"].(string))
 		} else if con["model_type"] == "py_service" {
 			psrs := inference.PyServiceRequestSummary{Paragraph: &emptyStr}
 			sr = &psrs
+			totalMaxTokens = con["max_tokens"].(int) - con["min_new_tokens"].(int)
 		} else {
 			panic("Invalid Model Type")
 		}
 
 		// TODO: Add channel for parallel summarization
-		summarysize := con["summary_size"].(int)
-		totalMaxTokens := con["max_tokens"].(int) - summarysize - len(con["summary_suffix"].(string))
-		summarizedText[model_name] = inference.GetSummarizedText(sr, comments, summarysize, totalMaxTokens)
+		summarizedText[model_name] = inference.GetSummarizedText(sr, comments, summarysize, totalMaxTokens,
+			con["model_name"].(string))
+		log.Println("Got summary from model" + model_name)
 	}
-	// con, ok := config["text-davinci-003"].(map[string]interface{})
-	// if !ok {
-	// 	panic("could not find key in the model config")
-	// }
-	// summarysize := con["summary_size"].(int)
-	// totalMaxTokens := con["max_tokens"].(int) - summarysize - len(con["summary_suffix"].(string))
-	// summarizedText := inference.GetSummarizedText(sr, comments, summarysize, totalMaxTokens)
+
+	fmt.Println(summarizedText)
 
 	c.JSON(200, strings.TrimSpace(summarizedText["text-davinci-003"]))
 }
