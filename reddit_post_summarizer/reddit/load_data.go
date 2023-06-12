@@ -182,7 +182,7 @@ func LoadComments(subReddit string, postId string, sortingMethod string, depth i
 	r, err := http.NewRequest("GET", "https://oauth.reddit.com/r/"+subReddit+"/comments/"+postId+"?sort="+sortingMethod+"&depth="+strconv.Itoa(depth), nil)
 
 	if err != nil {
-		log.Println("Error while creating new request")
+		log.Println("Error while creating new request for Reddit Load comments")
 		panic(err)
 	}
 
@@ -203,17 +203,17 @@ func LoadComments(subReddit string, postId string, sortingMethod string, depth i
 	responseData, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		log.Println("Error in reading raw comments from response")
+		log.Println("Error in reading raw comments from Reddit response")
 		log.Fatal(err)
 	}
-	log.Println("Response Status:", res.Status)
+	log.Println("Response Status from Reddit API for data fetching:", res.Status)
 
 	var resJson CommentResponse
 
 	err = json.Unmarshal(responseData, &resJson)
 
 	if err != nil {
-		log.Println("Error in unmarshalling")
+		log.Println("Error in unmarshalling Reddit Response")
 		log.Fatal(err)
 	}
 

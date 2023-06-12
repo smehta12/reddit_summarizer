@@ -28,6 +28,7 @@ func GetUserToken(username string, password string) string {
 	r, err := http.NewRequest("POST", "https://www.reddit.com/api/v1/access_token", strings.NewReader(encodedData))
 
 	if err != nil {
+		log.Println("Error when creating new user token request")
 		log.Println(err)
 		panic(err)
 	}
@@ -42,6 +43,7 @@ func GetUserToken(username string, password string) string {
 	res, err := client.Do(r)
 
 	if err != nil {
+		log.Println("Error when sending new user token request")
 		log.Println(err)
 		panic(err)
 	}
@@ -54,7 +56,7 @@ func GetUserToken(username string, password string) string {
 		log.Println(err)
 		panic(err)
 	}
-	log.Println("Response Status:", res.Status)
+	log.Println("Response Status when received new user token reponse:", res.Status)
 
 	var m UserTokenResponse
 	err = json.Unmarshal(responseData, &m)
