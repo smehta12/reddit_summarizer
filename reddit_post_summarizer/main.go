@@ -51,8 +51,6 @@ func getSummary(c *gin.Context) {
 	sortingMethod := "top"
 	depth := 1
 
-	// TODO: Add parallel summarization from different algorithms. Loop over different algorithms and
-	// get the best one.
 	bearerToken := reddit.GetUserToken(redditUName, redditPwd)
 	comments := reddit.LoadComments(subredditName, postId, sortingMethod, depth, bearerToken)
 
@@ -61,7 +59,9 @@ func getSummary(c *gin.Context) {
 
 	emptyStr := ""
 	var sr inference.SummarizerRequester
+	channel := make(chan inference.SummarizedTextReturn, len(config))
 	for model_name := range config {
+		log.Println("Getting summary from " + model_name)
 		con, ok := config[model_name].(map[string]interface{})
 		if !ok {
 			panic("could not find key in the model config")
@@ -81,10 +81,14 @@ func getSummary(c *gin.Context) {
 			panic("Invalid Model Type")
 		}
 
-		// TODO: Add channel for parallel summarization
-		summarizedText[model_name] = inference.GetSummarizedText(sr, comments, summarysize, totalMaxTokens,
-			con["model_name"].(string))
-		log.Println("Got summary from model" + model_name)
+		go inference.GetSummarizedText(sr, comments, summarysize, totalMaxTokens, con["model_name"].(string), channel)
+	}
+
+	for model_name := range config {
+		s := <-channel
+		if model_name == s.ModelName {
+			summarizedText[model_name] = s.Text
+		}
 	}
 
 	fmt.Println(summarizedText)

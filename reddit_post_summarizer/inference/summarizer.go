@@ -20,12 +20,19 @@ type PyServiceRequestSummary struct {
 	ModelName string
 }
 
+type SummarizedTextReturn struct {
+	ModelName string
+	Text      string
+}
+
 func GetSummarizedText(sr SummarizerRequester, comments []string, summarySize int, totalMaxTokens int,
-	model_name string) string {
+	model_name string, c chan SummarizedTextReturn) {
 	cleanupComments(comments)
 	summarizedText := summarizeTextRecursive(sr, comments, summarySize, totalMaxTokens, model_name)
 	summarizedText = formatSummary(&summarizedText)
-	return summarizedText
+	s := SummarizedTextReturn{ModelName: model_name, Text: summarizedText}
+	c <- s
+	// return summarizedText
 }
 
 // comments: data to summarize
