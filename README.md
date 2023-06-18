@@ -1,1 +1,32 @@
-# reddit_summarizer
+# Reddit Thread Summarizer
+
+This project summarizes reddit thread. It uses OpenAPI Text Da-Vinci model and 
+Huggingface T5 models to summarize. In the end it chooses best one using unsupervised 
+evaluation methods among multiple models and returns the text to user.
+
+This project has 2 parts. 
+### Go Based
+It provides REST API to initiate the request where user provides 
+Reddit credentials and link to the post the user wants to summarize. It also embeds
+interaction with the OpenAPI model to get the text summary. It uses following techniques
+to enable summarizer.
+   1) **Gin**: For web interface.
+   2) **Reddit REST API**: For getting Bearer user token from Reddit and comments data from the thread.
+   3) **OpenAPI REST API**: For getting summary from the text-davinci-003 model and 
+   Cleanup of summary using  text-davinci-edit model.
+   4) **Custom Python API**: Used for getting summary from the huggingface T5 transformer model.
+
+   It creates recursive calls for summarization if the text is bigger than model's max
+   size inputs. 
+   It also uses _Go Interfaces_ to prepare recursive summarization of all types of 
+   model.
+
+### Python Based
+It provides REST API for getting summarization from the different 
+flavors of the huggingface T5 models. Uses following techniques to enable this.
+   1) **FastAPI**: For providing REST API interface
+   2) **Huggingface API**: To downloads the models and generate summary
+
+
+### TODO
+Implement unsupervised technique to find best summary among given models' response.
