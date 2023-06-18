@@ -18,8 +18,8 @@ to enable summarizer.
 
    It creates recursive calls for summarization if the text is bigger than model's max
    size inputs. 
-   It also uses _Go Interfaces_ to prepare recursive summarization of all types of 
-   model.
+   It uses **_Go Interfaces_** to prepare recursive summarization of all types of 
+   model. It also uses **_channels_, _go routines_** for parallel summarization from the different models.
 
 ### Python Based
 It provides REST API for getting summarization from the different 
