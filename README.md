@@ -1,6 +1,6 @@
 # Reddit Thread Summarizer
 
-This project summarizes reddit thread. It uses OpenAPI Text Da-Vinci model and 
+This project summarizes reddit thread. It provides the full solution for the summarization that how it can be handeled for the fast responses. It uses OpenAPI Text Da-Vinci model and 
 Huggingface T5 models to summarize. In the end it chooses best one using unsupervised 
 evaluation methods among multiple models and returns the text to user.
 
