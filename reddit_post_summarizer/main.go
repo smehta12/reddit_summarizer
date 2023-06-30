@@ -87,13 +87,13 @@ func getSummary(c *gin.Context) {
 	for model_name := range config {
 		s := <-channel
 		if model_name == s.ModelName {
-			summarizedText[model_name] = s.Text
+			summarizedText[model_name] = strings.TrimSpace(s.Text)
 		}
 	}
 
 	fmt.Println(summarizedText)
 
-	c.JSON(200, strings.TrimSpace(summarizedText["text-davinci-003"]))
+	c.JSON(200, summarizedText)
 }
 
 func getYamlConfig() map[string]interface{} {
