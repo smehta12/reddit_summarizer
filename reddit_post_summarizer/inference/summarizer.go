@@ -41,7 +41,7 @@ func GetSummarizedText(sr SummarizerRequester, comments []string, summarySize in
 func summarizeTextRecursive(sr SummarizerRequester, comments []string, summarySize int, totalMaxTokens int,
 	model_name string) string {
 	// base case.
-	if len(comments) == 1 && len(comments[0]) < summarySize {
+	if len(comments) == 1 {
 		return comments[0]
 	}
 
@@ -51,12 +51,13 @@ func summarizeTextRecursive(sr SummarizerRequester, comments []string, summarySi
 	var summarizedText []string
 	for i < len(comments) {
 		numOfTokens := getNumberOfTokens(comments[i])
-
-		// TODO: What if the numOfTokens in the sentence is more than 4096?
-
+		// TODO: use channels for parallel requests.
 		totalNumOfTokens += numOfTokens
 		if totalNumOfTokens <= totalMaxTokens {
 			paragraph += comments[i]
+		} else if numOfTokens > totalMaxTokens {
+			// TODO: What if the numOfTokens in the sentence is more than totalMaxTokens?
+			// TODO: Devide the comment into small comments like less than max tokens allowed.
 		} else {
 			assignParagraph(sr, &paragraph, model_name)
 			summarizedText = append(summarizedText, sr.requestSummary())
