@@ -55,7 +55,7 @@ func getSummary(c *gin.Context) {
 	comments := reddit.LoadComments(subredditName, postId, sortingMethod, depth, bearerToken)
 
 	config := getYamlConfig()
-	summarizedText := make(map[string]string, len(config))
+	summaries := make(map[string]string, len(config))
 
 	emptyStr := ""
 	var sr inference.SummarizerRequester
@@ -87,13 +87,16 @@ func getSummary(c *gin.Context) {
 	for model_name := range config {
 		s := <-channel
 		if model_name == s.ModelName {
-			summarizedText[model_name] = strings.TrimSpace(s.Text)
+			summaries[model_name] = strings.TrimSpace(s.Text)
 		}
 	}
 
-	fmt.Println(summarizedText)
+	fmt.Println(summaries)
 
-	c.JSON(200, summarizedText)
+	// Rank summarization
+	highestRankedSummary := inference.GetHighestRankedSummary(postId, comments, summaries)
+
+	c.JSON(200, highestRankedSummary)
 }
 
 func getYamlConfig() map[string]interface{} {
