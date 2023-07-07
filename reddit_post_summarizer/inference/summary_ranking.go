@@ -26,7 +26,7 @@ func GetHighestRankedSummary(redditDocId string, comments []string, summaries ma
 	var i int
 	var highestAlgoScore string
 
-	for algo, _ := range summaries {
+	for algo := range summaries {
 		if scores[i] > float64(highestRankedSummary) {
 			highestAlgoScore = algo
 		}
