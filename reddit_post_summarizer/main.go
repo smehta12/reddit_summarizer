@@ -84,11 +84,9 @@ func getSummary(c *gin.Context) {
 		go inference.GetSummarizedText(sr, comments, summarysize, totalMaxTokens, con["model_name"].(string), channel)
 	}
 
-	for model_name := range config {
+	for len(summaries) != len(config) {
 		s := <-channel
-		if model_name == s.ModelName {
-			summaries[model_name] = strings.TrimSpace(s.Text)
-		}
+		summaries[s.ModelName] = strings.TrimSpace(s.Text)
 	}
 
 	fmt.Println(summaries)
