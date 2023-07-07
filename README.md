@@ -27,6 +27,5 @@ flavors of the huggingface T5 models. Uses following techniques to enable this.
    1) **FastAPI**: For providing REST API interface
    2) **Huggingface API**: To downloads the models and generate summary
 
-
-### TODO
-Implement unsupervised technique to find best summary among given models' response.
+### Unsupervised Summary Ranking
+It is a microservice created using [SUPERT](https://arxiv.org/abs/2005.03724). The FastAPI is used for the REST API interface. It takes Reddit comments as a doc and generated summary as an inputs and ranks the summaries to find the best. SUPERT rates the quality of a summary by measuring its semantic similarity with a pseudo reference summary, i.e. selected salient sentences from the source documents, using contextualized embeddings and soft token alignment techniques.
