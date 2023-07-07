@@ -32,7 +32,6 @@ func GetSummarizedText(sr SummarizerRequester, comments []string, summarySize in
 	summarizedText = formatSummary(&summarizedText)
 	s := SummarizedTextReturn{ModelName: model_name, Text: summarizedText}
 	c <- s
-	// return summarizedText
 }
 
 // comments: data to summarize
