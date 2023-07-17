@@ -12,11 +12,11 @@ import (
 )
 
 type SummarizerRequester interface {
-	requestSummary() string
+	requestSummary(c chan string)
 }
 
 type PyServiceRequestSummary struct {
-	Paragraph *string
+	Paragraph string
 	ModelName string
 }
 
@@ -48,9 +48,11 @@ func summarizeTextRecursive(sr SummarizerRequester, comments []string, summarySi
 	totalNumOfTokens := 0
 	var paragraph string
 	var summarizedText []string
+	channel := make(chan string, 4)
+	usedChannel := false
+
 	for i < len(comments) {
 		numOfTokens := getNumberOfTokens(comments[i])
-		// TODO: use channels for parallel requests.
 		totalNumOfTokens += numOfTokens
 		if totalNumOfTokens <= totalMaxTokens {
 			paragraph += comments[i]
@@ -58,8 +60,11 @@ func summarizeTextRecursive(sr SummarizerRequester, comments []string, summarySi
 			// TODO: What if the numOfTokens in the sentence is more than totalMaxTokens?
 			// TODO: Devide the comment into small comments like less than max tokens allowed.
 		} else {
-			assignParagraph(sr, &paragraph, model_name)
-			summarizedText = append(summarizedText, sr.requestSummary())
+			// Can't pass the pointer of paragraph here because sometimes it gets reset before subsequant
+			// calls processes it.
+			assignParagraph(sr, paragraph, model_name)
+			go sr.requestSummary(channel)
+			usedChannel = true
 			i--
 			totalNumOfTokens = 0
 			paragraph = ""
@@ -67,13 +72,19 @@ func summarizeTextRecursive(sr SummarizerRequester, comments []string, summarySi
 		i++
 	}
 
+	if usedChannel {
+		summStr := <-channel
+		summarizedText = append(summarizedText, summStr)
+	}
+
 	// for last paragraph
-	assignParagraph(sr, &paragraph, model_name)
-	summarizedText = append(summarizedText, sr.requestSummary())
+	assignParagraph(sr, paragraph, model_name)
+	go sr.requestSummary(channel)
+	summarizedText = append(summarizedText, <-channel)
 	return summarizeTextRecursive(sr, summarizedText, summarySize, totalMaxTokens, model_name)
 }
 
-func assignParagraph(sr SummarizerRequester, paragraph *string, model_name string) {
+func assignParagraph(sr SummarizerRequester, paragraph string, model_name string) {
 	switch s := sr.(type) {
 	case *PyServiceRequestSummary:
 		s.Paragraph = paragraph
@@ -101,8 +112,8 @@ func getNumberOfTokens(comment string) int {
 	return len(encoding.Encode(comment, nil, nil))
 }
 
-func (rs PyServiceRequestSummary) requestSummary() string {
-	values := map[string]string{"model_name": rs.ModelName, "prompt": *rs.Paragraph}
+func (rs PyServiceRequestSummary) requestSummary(c chan string) {
+	values := map[string]string{"model_name": rs.ModelName, "prompt": rs.Paragraph}
 
 	jsonValue, _ := json.Marshal(values)
 
@@ -120,5 +131,5 @@ func (rs PyServiceRequestSummary) requestSummary() string {
 		panic(err)
 	}
 
-	return string(respData)
+	c <- string(respData)
 }

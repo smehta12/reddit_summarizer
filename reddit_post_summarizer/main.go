@@ -70,11 +70,11 @@ func getSummary(c *gin.Context) {
 		summarysize := con["min_new_tokens"].(int)
 		var totalMaxTokens int
 		if con["model_type"] == "openai" {
-			ors := inference.OpenAIRequestSummary{Paragraph: &emptyStr}
+			ors := inference.OpenAIRequestSummary{Paragraph: emptyStr}
 			sr = &ors
 			totalMaxTokens = con["max_tokens"].(int) - summarysize - len(con["summary_suffix"].(string))
 		} else if con["model_type"] == "py_service" {
-			psrs := inference.PyServiceRequestSummary{Paragraph: &emptyStr}
+			psrs := inference.PyServiceRequestSummary{Paragraph: emptyStr}
 			sr = &psrs
 			totalMaxTokens = con["max_tokens"].(int) - con["min_new_tokens"].(int)
 		} else {

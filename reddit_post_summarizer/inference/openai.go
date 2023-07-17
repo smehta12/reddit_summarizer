@@ -3,6 +3,7 @@ package inference
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -49,11 +50,11 @@ type SummaryCleanupResponse struct {
 }
 
 type OpenAIRequestSummary struct {
-	Paragraph *string
+	Paragraph string
 	ModelName string
 }
 
-func (rs OpenAIRequestSummary) requestSummary() string {
+func (rs OpenAIRequestSummary) requestSummary(c chan string) {
 
 	type ModelParameters struct {
 		Model           string  `json:"model"`
@@ -68,7 +69,7 @@ func (rs OpenAIRequestSummary) requestSummary() string {
 
 	var mp ModelParameters
 	mp.Model = rs.ModelName
-	mp.Prompt = *rs.Paragraph + SUMMARY_SUFFIX
+	mp.Prompt = rs.Paragraph + SUMMARY_SUFFIX
 	mp.MaxTokens = 500
 	mp.Suffix = ""
 	mp.N = 1
@@ -94,7 +95,8 @@ func (rs OpenAIRequestSummary) requestSummary() string {
 		log.Fatal(err)
 	}
 
-	return resJson.Choices[0].Text
+	fmt.Println("Response Orig:" + resJson.Choices[0].Text)
+	c <- resJson.Choices[0].Text
 }
 
 func formatSummary(summary *string) string {
@@ -143,7 +145,7 @@ func openaiPostRequest(body io.Reader, requestURL string, intent string) []byte 
 	response, err := client.Do(request)
 
 	if err != nil {
-		log.Println("Error while getting response for" + intent)
+		log.Println("Error while getting response from OpenAI for " + intent)
 		panic(err)
 	}
 
