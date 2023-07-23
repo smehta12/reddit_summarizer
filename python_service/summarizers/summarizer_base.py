@@ -1,3 +1,4 @@
+import os
 from abc import abstractmethod
 import yaml
 from yaml import Loader
@@ -6,7 +7,7 @@ class SummarizerBase(object):
 
     @staticmethod
     def get_model_configs():
-        with open("../../model_configs.yaml") as f:
+        with open(os.path.dirname(os.path.abspath(__file__)) + "/../../model_configs.yaml") as f:
             return yaml.load(f, Loader)
 
     def __init__(self, model_name):
