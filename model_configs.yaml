@@ -5,12 +5,14 @@ t5-small:
     tokenizer_name: "t5-small"
     max_tokens: 512
     min_new_tokens: 80 # ~15% of max_length
+    saved_model_file_name: "tf_model.h5"
 #t5-large:
 #    model_type: "py_service"
 #    model_name: "t5-large"
 #    tokenizer_name: "t5-large"
 #    max_tokens: 512
 #    min_new_tokens: 80 # ~15% of max_length
+#    saved_model_file_name: "tf_model.h5"
 text-davinci-003:
     model_type: "openai"
     model_name: "text-davinci-003"
