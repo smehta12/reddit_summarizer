@@ -24,7 +24,7 @@ def home():
     return "Welcome to Summarization Service!"
 
 @app.post("/summarize", tags=["summarization"])
-def summarize(summarizer_input: SummarizerInput):
+async def summarize(summarizer_input: SummarizerInput):
     model = get_model_object(summarizer_input.model_name)
     return model.summarize(summarizer_input.prompt)
 
