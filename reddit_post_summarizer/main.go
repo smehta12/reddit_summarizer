@@ -57,6 +57,7 @@ func getSummary(c *gin.Context) {
 	config := getYamlConfig()
 	summaries := make(map[string]string, len(config))
 
+	log.Println("Starting to get summaries")
 	emptyStr := ""
 	var sr inference.SummarizerRequester
 	channel := make(chan inference.SummarizedTextReturn, len(config))
@@ -90,10 +91,12 @@ func getSummary(c *gin.Context) {
 	}
 
 	fmt.Println(summaries)
+	log.Println("Completed gettting summaries")
 
 	// Rank summarization
 	highestRankedSummary := inference.GetHighestRankedSummary(postId, comments, summaries)
 
+	log.Println("Sending highest ranked summary")
 	c.JSON(200, highestRankedSummary)
 }
 
